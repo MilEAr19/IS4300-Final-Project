@@ -1,0 +1,108 @@
+---
+title: "IS-4300 Final Project"
+author: "Milciades Arauz"
+date: "4/30/2021"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+
+if(!require(tidyverse)) install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+```
+
+```{r include = FALSE}
+knitr::opts_chunk$set(comment = NA)
+```
+
+```{r , echo=FALSE}
+
+urlFile <- 'https://raw.githubusercontent.com/MilEAr19/IS4300-Final-Project/main/Passes_of_League_Tournament.csv'
+passes <- read.csv(urlFile)
+```
+## Introduction
+
+This project is about the comparison between passes in a league match and in a tournament match. The variables that we will use are **CompT.Pass** for completed passes in a tournament and **CompL.Pass** for completed passes in the league. Even though the analysis is comparing the amount of passes, it also be in usage the variables **Player** and **Pos** to get further detail in who made the passes and in which position they play. 
+
+```{r echo=FALSE}
+
+names(passes) <- c("Player","Pos","Age","CompT.Pass","AttemT.Pass","Comp.T.","CompL.Pass","AttemTL.","Cmp.TL.")
+
+passes$Player[c(4,8,9,14,15,17,18,19)] <- c("Thiago Alcántara","Jérôme Boateng","Thomas Müller", "Ivan Perišić","Javi Martínez","Niklas Süle","Lucas Hernández","Álvaro Odriozola")
+
+Passes <- as.data.frame(passes)
+
+Passes <- Passes %>% select(1,2,4,7)
+
+head(Passes)
+```
+
+
+## Heads-Up
+Before we take a look to the histograms is that there is a huge difference because of number if games each "category" has, in the german league or Bundesliga there are thirty-four games while in the tournament also known as Champions League there are six for group stage or thirteen if the team go all the way to the final, which Bayern Munich did. 
+
+### League's Histogram 
+
+The first histogram that were going to check is the league's histogram, it has the number of players on the "y" and the amount of passes in the axis x. 
+One way to read this histogram is tha nine players made more than 500 passes, other example would be only two players made more than 1000 passes, but they are six players that achieved more than 1500 passes.
+
+```{r echo=FALSE}
+library(ggplot2)
+
+Pass1 <- Passes$CompL.Pass
+hist(Pass1, col= "red3", main = "League Passes" , labels = TRUE, xlab = "Passes", ylab = "Players", ylim = c(0,10))
+
+```
+
+
+### Tournament's Histogram
+
+The next histogram is more unique way, instead of a ascending rate of passes, in this histogram it suddenly stops at 600 passes, and skips the 600-700 range to keep going in the 700-800 range, only *two* players were able to break the constant rate.
+
+```{r echo=FALSE}
+Pass2<- Passes$CompT.Pass
+hist(Pass2, col = "blue3", main = "Tournament Passes", xlab = "Passes", ylab = "Players", ylim = c(0,10),breaks = 10, labels = TRUE)
+```
+
+## Boxplot
+The next visual is comparing between the two quantities of passes.
+```{r echo=FALSE}
+boxplot(Passes$CompL.Pass, Passes$CompT.Pass , main ="League Passes vs Tournament Passes" ,horizontal = TRUE ,at = c(1,2), names = c("League", "Tournament"), col = c("red3", "blue3"))
+```
+As you can see in the box plot, both data have huge difference between them,the max number in the Tournament's boxplot is the median of the League's boxplot and the reason behind is the amount of games each competion has, just as it was briefly explained in the **Heads-Up**
+
+## Scatter Plot 
+Another data was unseen, it's about the variable *Player*, which it comes with two questions: Which position provide the most completed passes? and Who is player?
+
+```{r , echo=FALSE}
+posplot <- Passes %>% ggplot()
+
+posplot<- posplot + geom_point(aes(CompL.Pass, CompT.Pass, col= Pos), size = 2.7) + 
+   geom_text(aes(CompL.Pass, CompT.Pass), label = Passes$Player, size = 2.4) + ggtitle("Passes per Postion/Player")
+posplot
+```
+The scatter plot not only output the position but the names as well. Apparently the player who most provided completed passes is Joshua Kimmich, the other player very close is Thiago Alcantara. The reason why Joshua a Kimmich is high it's because he plays two different position DF as a Right Back or *RB* and MF as Central Defense Midfielder or *CDM*. Because of these two positions Kimmich has more chances to pass the ball. 
+
+### Type of Play
+You wonder why these two players have the most amount of passes. In the 2019-2020 the team used these lineup Thiago in the middle as a *CDM* and Joshua as *RB*, not only them but most of the players that have a decent number of passes are defenders. In the scatter plot you can "see" their way of play is passing the nack retaining possession to use this as an counter attack.   
+
+![Bayern Munich 2019-2020](https://talksport.com/wp-content/uploads/sites/5/2019/08/Bayern-Munich.png?strip=all&w=250&quality=100)
+
+[B. Munich Lineup](https://talksport.com/wp-content/uploads/sites/5/2019/08/Bayern-Munich.png?strip=all&w=250&quality=100)
+
+
+## Two Sample t-test
+
+Now that we have the visual out of the way. Lets have a test on the sample data, *CompL.Pass*  would be the independent variable and *CompT.Pass* is the dependent variable. The decision of what variable is independent or dependent were based the amount of games each competition has.
+
+```{r echo=FALSE}
+pass_final <- t.test(Passes$CompL.Pass, Passes$CompT.Pass) 
+
+pass_final
+```
+We can conclude that with at the .05 level of significance, there is very significant difference between League passes and Tournament passes with the difference of 702.75 passes. 
